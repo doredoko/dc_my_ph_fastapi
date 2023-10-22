@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  python-api:
+      #image: python:3.11-buster
+      container_name: python_host
+      build: .
+      volumes:
+        - .:/src
+      ports:
+        - "8000:8000" # ホストマシンのポート8000を、docker内のポート8000に接続する
+      environment:
+        PMA_HOST: mysql
+#      networks:
+#        - mysql_bridge
+
+  mysql:
+    image: mysql:8.0.27
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      TZ: 'Asia/Tokyo'
+    volumes:
+      - type: bind
+        source: "./test_volume"
+        target: "/var/lib/mysql"
+#    volumes:
+#      - db-data:/var/lib/mysql
+#    networks:
+#      - mysql_bridge
+
+  phpmyadmin:
+    image: phpmyadmin
+    depends_on:
+      - mysql
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOSTS=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=mysql
+    ports:
+      - "3001:80"
+#    networks:
+#      - mysql_bridge
+
+volumes:
+  db-data:
+# コンテナ間で通信を行うためのネットワークブリッジ
+#networks:
+#  mysql_bridge:
+#    driver: bridge
